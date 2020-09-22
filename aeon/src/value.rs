@@ -5,7 +5,7 @@ pub trait AeonConvert {
     fn str(self) -> Option<String>;
     fn int(self) -> Option<i64>;
     fn double(self) -> Option<f64>;
-    fn map(self) -> Option<HashMap<String,AeonValue>>;
+    fn map(self) -> Option<HashMap<String,AeonValue>>; // TODO: (not sure if Rust allows this) allow numbers as keys as well? i.e. HashMap<AeonKey, AeonValue>, enum AeonKey { String(String), Number(i64) }
     fn list(self) -> Option<Vec<AeonValue>>;
     fn get(&self, prop: &str) -> Option<AeonValue>;
     fn remove(&mut self, prop: &str) -> Option<AeonValue>;

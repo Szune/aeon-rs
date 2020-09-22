@@ -138,6 +138,7 @@ impl <'a> Lexer<'a> {
     }
 
     fn get_string(&mut self) -> Result<Option<Token>, String> {
+        // TODO: allow 'text' as alternative string syntax as well?
         let mut t_str = String::with_capacity(10);
         while let Some(t) = self.code.next() {
             match t {
