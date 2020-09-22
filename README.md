@@ -1,6 +1,7 @@
 # Aeon
 
-⚠ **Not production ready**
+⚠ **Works, but isn't production ready**
+⚠ **aeon-derive is barely started**
 
 Awfully exciting object notation
 
@@ -17,6 +18,7 @@ servers: [
 ```rust
 let servers = aeon::deserialize(data).unwrap().get("servers").unwrap().list().unwrap();
 println!("{:?}", servers);
+// there's also get("path/to/value") functions, currently they do not support indexing though
 ```
 
 ### Comments
