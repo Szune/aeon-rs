@@ -1,6 +1,7 @@
 # Aeon
 
 ⚠ **Works, but isn't production ready**
+
 ⚠ **aeon-derive is barely started**
 
 Awfully exciting object notation
@@ -39,6 +40,7 @@ thing: "text" # and at the end of lines
 Macros are parsed as HashMap<String, AeonValue>.
 
 Macros start with an '@' symbol, followed by an identifier and a list of arguments.
+
 E.g. @identifier(argument1, argument2, argument3)
 
 Macros need to be defined before they are used, preferably at the start of the file, before any variables.
