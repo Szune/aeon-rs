@@ -32,11 +32,11 @@ impl AeonFormatter for PrettySerializer {
             indent_skip: false,
         };
         let mut s = String::with_capacity(50);
-        for (k,v) in &obj.macros {
+        for (_,v) in &obj.macros {
             ser.serialize_macro(v, &mut s);
         }
         s.push('\n');
-        for (k,v) in &obj.properties {
+        for (_,v) in &obj.properties {
             ser.serialize_property(&obj, v, &mut s);
             s.push('\n');
             s.push('\n');
@@ -125,7 +125,7 @@ impl AeonFormatter for PrettySerializer {
                     s.push_str(&m.name);
                     s.push('(');
                     self.indent += 4;
-                    if v.iter().any(|(k,v)| matches!(v, AeonValue::List(_))) {
+                    if v.iter().any(|(_,v)| matches!(v, AeonValue::List(_))) {
                         self.indent_skip = true;
                         for i in 0..m.args.len() {
                             if i != 0 {
@@ -179,132 +179,6 @@ impl AeonFormatter for PrettySerializer {
             }
         }
     }
-}
-
-/* old serializer */
-
-pub struct Serializer {
-    pub aeon: AeonObject,
-    pretty: bool,
-}
-
-impl Serializer {
-    pub fn new(aeon: AeonObject, pretty: bool) -> Serializer {
-        Serializer {
-            aeon,
-            pretty,
-        }
-    }
-
-    pub fn serialize_macros(&self, s: &mut String) {
-        for m in &self.aeon.macros {
-            s.push('@');
-            s.push_str(m.1.name.as_str());
-            s.push('(');
-            for arg in 0..m.1.args.len() {
-                serialize_arg!(s, arg, &m.1.args[arg]);
-            }
-            s.push(')');
-            s.push('\n');
-        }
-        if self.pretty {
-            s.push('\n');
-        }
-    }
-
-    fn serialize_property_value(&self, s: &mut String, val: &AeonValue) {
-        match val {
-            AeonValue::Nil => {
-                s.push_str("nil");
-            },
-            AeonValue::Bool(v) => {
-                s.push_str(if *v { "true" } else { "false" }); // could probably just use v.to_string() here
-            },
-            AeonValue::String(v) => {
-                s.push('"');
-                s.push_str(v.as_str());
-                s.push('"');
-            },
-            AeonValue::Integer(v) => {
-                s.push_str(&v.to_string());
-            },
-            AeonValue::Double(v) => {
-                s.push_str(&v.to_string());
-            },
-            AeonValue::List(v) => {
-                s.push('[');
-
-                for i in 0..v.len() {
-                    if i != 0 {
-                        s.push(',');
-                        s.push(' ');
-                    }
-                    if self.pretty {
-                        s.push('\n');
-                        s.push('\t');
-                    }
-                    self.serialize_property_value(s, &v[i]);
-                }
-                if self.pretty && !v.is_empty() {
-                    s.push('\n');
-                }
-                s.push(']');
-            }
-            AeonValue::Map(v) => {
-                if let Some(m) = self.aeon.try_get_macro(v) {
-                    // first check if a macro exists for this map
-                    s.push_str(&m.name);
-                    s.push('(');
-                    for i in 0..m.args.len() {
-                        if i != 0 {
-                            s.push(',');
-                            s.push(' ');
-                        }
-                        self.serialize_property_value(s, &v[&m.args[i]]);
-                    }
-                    s.push(')');
-                } else {
-                    // if not, serialize as a regular map
-                    s.push('{');
-                    let mut f = true;
-                    for (k, v) in v.iter() {
-                        if f { f = false; }
-                        else {
-                            s.push(',');
-                            s.push(' ');
-                        }
-                        s.push('"');
-                        s.push_str(k.as_str());
-                        s.push('"');
-                        s.push(':');
-                        s.push(' ');
-                        self.serialize_property_value(s, v);
-                    }
-                    s.push('}');
-                }
-            }
-        }
-    }
-
-    fn serialize_properties(&self, s: &mut String) {
-        for (k,p) in &self.aeon.properties {
-            s.push_str(p.name.as_str());
-            s.push(':');
-            s.push(' ');
-            self.serialize_property_value(s, &p.value);
-
-            s.push('\n');
-        }
-    }
-
-
-    pub fn serialize(&self) -> String {
-        let mut s = String::with_capacity(50);
-        self.serialize_macros(&mut s);
-        self.serialize_properties(&mut s);
-        s
-    }
-
 }
 
 #[cfg(test)]
