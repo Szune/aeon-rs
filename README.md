@@ -2,8 +2,6 @@
 
 ⚠ **Works, but isn't production ready**
 
-⚠ **aeon-derive is barely started**
-
 Awfully exciting object notation
 
 ### Example file
@@ -17,9 +15,47 @@ servers: [
 
 ### Usage
 ```rust
-let servers = aeon::deserialize(data).unwrap().get("servers").unwrap().list().unwrap();
+/* using derive macro */
+use aeon::convert_panic::*;
+use aeon::*;
+use aeon_derive::{Deserialize,Serialize};
+
+#[derive(Serialize, Deserialize, Debug)]
+pub struct Heuristic{
+    pub value: String,
+    pub weight: i32,
+} 
+
+#[derive(Serialize, Deserialize, Debug)]
+pub struct WithHeuristics {
+	pub something: Vec<Heuristic>,
+	pub else: bool,
+}
+
+// deserialize:
+let heuristics = WithHeuristics::from_aeon(some aeon string here);
+// serialize:
+println!("{}", WithHeuristics::to_aeon(&heuristics));
+// would print something similar to:
+/*
+@heuristic(value, weight)
+
+something: [
+	heuristic("some_name", 10),
+	heuristic("some_other_name", 19),
+]
+
+else: false
+*/
+
+
+/* typing it out manually */
+use aeon::*;
+use aeon::convert_panic::*; // there's also aeon::convert::* if you prefer Option<T> over panics
+
+let servers = aeon::deserialize(data).get("servers").list();
 println!("{:?}", servers);
-// there's also get("path/to/value") functions, currently they do not support indexing though
+// there's also get_path("path/to/value") functions
 ```
 
 ### Comments
@@ -29,9 +65,12 @@ Comments start with a '#' symbol.
 thing: "text" # and at the end of lines
 ```
 
+Comments are _not_ serialized when performing deserializing -> serializing, this may change in the future
+
 ### Supported types
 - Lists - ["One", 2, 3]
 - Maps - {"one": 1, "a": "b"}
+- Bools (true/false are the only valid identifiers for bools)
 - Integers
 - Decimal numbers - Use a dot '.' as the decimal separator
 - Strings - Use double quotes, e.g. "this is a string"
