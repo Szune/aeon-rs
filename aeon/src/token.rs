@@ -13,5 +13,7 @@ pub enum Token {
     Integer(i64),
     Double(f64),
     At,
+    True,
+    False,
     Nil,
 }

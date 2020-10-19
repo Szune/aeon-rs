@@ -84,17 +84,21 @@ impl <'a> Lexer<'a> {
                 p => {
                     self.prev = Some(p);
                     t_str.shrink_to_fit();
-                    if t_str == "nil" {
-                        return Ok(Some(Token::Nil));
-                    }
-                    return Ok(Some(Token::Identifier(t_str)));
+                    return match t_str.as_str() {
+                        "nil" => Ok(Some(Token::Nil)),
+                        "true" => Ok(Some(Token::True)),
+                        "false" => Ok(Some(Token::False)),
+                        _ => Ok(Some(Token::Identifier(t_str))),
+                    };
                 },
             }
         }
-        if t_str == "nil" {
-            Ok(Some(Token::Nil))
-        } else {
-            Ok(Some(Token::Identifier(t_str)))
+
+        match t_str.as_str() {
+            "nil" => Ok(Some(Token::Nil)),
+            "true" => Ok(Some(Token::True)),
+            "false" => Ok(Some(Token::False)),
+            _ => Ok(Some(Token::Identifier(t_str))),
         }
     }
 

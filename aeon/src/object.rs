@@ -1,4 +1,4 @@
-use crate::value::{AeonValue, AeonConvert};
+use crate::value::{AeonValue};
 use std::collections::HashMap;
 
 #[derive(Clone, Debug)]
@@ -62,11 +62,17 @@ impl AeonObject {
     }
 
     pub fn add_property(&mut self,  value: AeonProperty) {
+        if self.properties.contains_key(&value.name) {
+            return;
+        }
         self.properties.insert(value.name.clone(), value);
         self.is_empty = false;
     }
 
     pub fn add_macro(&mut self, mac: Macro) {
+        if self.macros.contains_key(&mac.name) {
+            return;
+        }
         self.macros.insert(mac.name.clone(), mac);
         self.is_empty = false;
     }
@@ -99,54 +105,6 @@ impl AeonObject {
         None
     }
 
-    pub fn get(&self, prop: &str) -> Option<AeonValue> {
-        return if let Some(p) = self.properties.get(prop) {
-            Some(p.value.clone())
-        } else {
-            None
-        }
-    }
-
-    pub fn get_path(&self, path: &str) -> Option<AeonValue> {
-        let fragments = path.split('/');
-        let mut iter = fragments.filter(|&f| f != "");
-        let mut current : Option<AeonValue>;
-        if let Some(frag) = iter.next() {
-            current = self.get(frag);
-        } else {
-            return None;
-        }
-
-        while let Some(frag) = iter.next() {
-            current = current.get(frag);
-        }
-        current
-    }
-
-    pub fn remove(&mut self, prop: &str) -> Option<AeonValue> {
-        return if let Some(p) = self.properties.remove(prop) {
-            Some(p.value)
-        } else {
-            None
-        }
-    }
-
-    pub fn remove_path(&mut self, path: &str) -> Option<AeonValue> {
-        let fragments = path.split('/');
-        let mut iter = fragments.filter(|&f| f != "");
-        let mut current : Option<AeonValue>;
-        if let Some(frag) = iter.next() {
-            current = self.remove(frag);
-        } else {
-            return None;
-        }
-
-        while let Some(frag) = iter.next() {
-            current = current.remove(frag);
-        }
-        current
-    }
-
     pub fn copy_macros_to(&self, other: &mut AeonObject) {
         other.macros.extend(self.macros.clone());
     }
@@ -155,7 +113,7 @@ impl AeonObject {
 #[cfg(test)]
 mod tests {
     use crate::object::{AeonProperty, AeonValue, AeonObject, Macro};
-    use crate::value::{AeonConvert};
+    use crate::convert::*;
     use crate::map;
 
     #[test]

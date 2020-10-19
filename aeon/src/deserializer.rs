@@ -147,6 +147,8 @@ impl <'a> Deserializer<'a> {
             Token::String(s) => Ok(AeonValue::String(s.clone())),
             Token::Integer(i) => Ok(AeonValue::Integer(*i)),
             Token::Double(d) => Ok(AeonValue::Double(*d)),
+            Token::True => Ok(AeonValue::Bool(true)),
+            Token::False => Ok(AeonValue::Bool(false)),
             Token::Nil => Ok(AeonValue::Nil),
             s => Err(format!("Unexpected token {:?} when constant was expected", s)),
         }
