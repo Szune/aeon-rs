@@ -1,5 +1,6 @@
 use crate::object::{AeonObject, Macro, AeonProperty};
 use crate::value::{AeonValue};
+use std::net::IpAddr;
 
 macro_rules! serialize_arg(
     ($s:ident, $idx:ident, $val:expr) => {
@@ -188,6 +189,19 @@ impl AeonFormatter for PrettySerializer {
                         indent_me!(self, s);
                     }
                     s.push('}');
+                }
+            }
+            AeonValue::Ip(ip) => {
+                match ip {
+                    IpAddr::V4(v4) => {
+                        let octets = v4.octets()
+                            .iter()
+                            .map(|o|o.to_string())
+                            .collect::<Vec<String>>()
+                            .join(".");
+                        s.push_str(octets.as_str());
+                    }
+                    IpAddr::V6(_) => {todo!()}
                 }
             }
         }

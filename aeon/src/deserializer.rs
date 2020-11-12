@@ -144,6 +144,7 @@ impl <'a> Deserializer<'a> {
 
     fn deserialize_constants(&mut self, tok: &Token) -> Result<AeonValue, String> {
         match tok {
+            Token::Ip(ip) => Ok(AeonValue::Ip(*ip)),
             Token::String(s) => Ok(AeonValue::String(s.clone())),
             Token::Integer(i) => Ok(AeonValue::Integer(*i)),
             Token::Double(d) => Ok(AeonValue::Double(*d)),

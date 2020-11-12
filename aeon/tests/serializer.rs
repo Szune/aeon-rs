@@ -142,6 +142,17 @@ mod tests {
     }
 
     #[test]
+    pub fn serialize_ip_property() {
+        let mut aeon = AeonObject::new();
+        let aeon_value = AeonProperty::new(
+            "ip".into(),
+            AeonValue::Ip(std::net::IpAddr::V4(std::net::Ipv4Addr::new(127, 1, 2, 3))));
+        aeon.add_property(aeon_value);
+        let ser = aeon::serialize(aeon);
+        assert_eq!("ip: 127.1.2.3\n\n", ser);
+    }
+
+    #[test]
     pub fn serialize_list_of_ints() {
         let mut aeon = AeonObject::new();
         let aeon_value = AeonProperty::new("values".into(), AeonValue::List(vec![

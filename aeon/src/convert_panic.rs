@@ -9,6 +9,8 @@ pub trait AeonConvert {
     fn str(self) -> String;
     fn int(self) -> i64;
     fn double(self) -> f64;
+    fn ip(self) -> std::net::IpAddr;
+    fn ip_str(self) -> String;
     fn map(self) -> HashMap<String,AeonValue>;
     fn list(self) -> Vec<AeonValue>;
     fn get(&self, prop: &str) -> AeonValue;
@@ -47,6 +49,18 @@ impl AeonConvert for AeonValue {
     fn double(self) -> f64 {
         panic_convert!(self, AeonValue::Double)
     }
+
+    fn ip(self) -> std::net::IpAddr {
+        panic_convert!(self, AeonValue::Ip)
+    }
+
+    fn ip_str(self) -> String {
+        match self {
+            AeonValue::Ip(ip) => ip.to_string(),
+            _ => panic!("Invalid value conversion for {:?}", self),
+        }
+    }
+
 
     fn map(self) -> HashMap<String,AeonValue> {
         panic_convert!(self, AeonValue::Map)

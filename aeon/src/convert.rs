@@ -8,6 +8,8 @@ pub trait AeonConvert {
     fn str(self) -> Option<String>;
     fn int(self) -> Option<i64>;
     fn double(self) -> Option<f64>;
+    fn ip(self) -> Option<std::net::IpAddr>;
+    fn ip_str(self) -> Option<String>;
     fn map(self) -> Option<HashMap<String,AeonValue>>;
     fn list(self) -> Option<Vec<AeonValue>>;
     fn get(&self, prop: &str) -> Option<AeonValue>;
@@ -46,6 +48,17 @@ impl AeonConvert for AeonValue {
 
     fn double(self) -> Option<f64> {
         try_convert!(self, AeonValue::Double)
+    }
+
+    fn ip(self) -> Option<std::net::IpAddr> {
+        try_convert!(self, AeonValue::Ip)
+    }
+
+    fn ip_str(self) -> Option<String> {
+        match self {
+            AeonValue::Ip(ip) =>Some(ip.to_string()),
+            _ => None,
+        }
     }
 
     fn map(self) -> Option<HashMap<String,AeonValue>> {
@@ -121,6 +134,14 @@ impl AeonConvert for Option<AeonValue> {
 
     fn double(self) -> Option<f64> {
         opt_convert!(self, double)
+    }
+
+    fn ip(self) -> Option<std::net::IpAddr> {
+        opt_convert!(self, ip)
+    }
+
+    fn ip_str(self) -> Option<String> {
+        opt_convert!(self, ip_str)
     }
 
     fn map(self) -> Option<HashMap<String,AeonValue>> {

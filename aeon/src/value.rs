@@ -9,4 +9,5 @@ pub enum AeonValue {
     Double(f64),
     Map(HashMap<String,AeonValue>),
     List(Vec<AeonValue>),
+    Ip(std::net::IpAddr),
 }
