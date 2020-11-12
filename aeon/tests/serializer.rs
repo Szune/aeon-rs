@@ -95,10 +95,26 @@ mod tests {
         // or just don't test the entire serialization and instead its parts
         assert!(serialized.starts_with("character: {"));
         assert!(serialized.ends_with("}\n\n"));
-        assert!(serialized.contains(r#""name": "erki""#));
-        assert!(serialized.contains(r#""world": 1"#));
-        assert!(serialized.contains(r#""double": 139.3567"#));
-        assert!(serialized.contains(r#""or_nothing": nil"#));
+        assert!(serialized.contains(r#"name: "erki""#));
+        assert!(serialized.contains("world: 1"));
+        assert!(serialized.contains("double: 139.3567"));
+        assert!(serialized.contains("or_nothing: nil"));
+        assert!(serialized.contains(","));
+    }
+
+    #[test]
+    pub fn serialize_map_property_key_that_is_not_a_valid_identifier() {
+        let mut aeon = AeonObject::new();
+        let aeon_value = AeonProperty::new("job".into(), AeonValue::Map(map![
+           "9to5".into() => AeonValue::Bool(true),
+           "NineToFive".into() => AeonValue::Bool(true),
+        ]));
+        aeon.add_property(aeon_value);
+        let serialized = aeon::serialize(aeon);
+        assert!(serialized.starts_with("job: {"));
+        assert!(serialized.ends_with("}\n\n"));
+        assert!(serialized.contains(r#""9to5": true"#));
+        assert!(serialized.contains(r#"NineToFive: true"#));
         assert!(serialized.contains(","));
     }
 

@@ -133,6 +133,7 @@ impl AeonFormatter for PrettySerializer {
                     s.push('(');
                     self.indent += 4;
                     if v.iter().any(|(_,v)| matches!(v, AeonValue::List(_))) {
+                        // map contains a list
                         self.indent_skip = true;
                         for i in 0..m.args.len() {
                             if i != 0 {
@@ -147,6 +148,7 @@ impl AeonFormatter for PrettySerializer {
                             indent_me!(self, s);
                         }
                     } else {
+                        // map contains no list
                         for i in 0..m.args.len() {
                             self.indent_skip = true;
                             if i != 0 {
@@ -169,9 +171,13 @@ impl AeonFormatter for PrettySerializer {
                             s.push(' ');
                         }
                         s.push('\n');
-                        s.push('"');
-                        s.push_str(k.as_str());
-                        s.push('"');
+                        if !is_valid_identifier(k.as_str()) {
+                            s.push('"');
+                            s.push_str(k.as_str());
+                            s.push('"');
+                        } else {
+                            s.push_str(k.as_str());
+                        }
                         s.push(':');
                         s.push(' ');
                         self.indent_skip = true;
@@ -186,4 +192,25 @@ impl AeonFormatter for PrettySerializer {
             }
         }
     }
+}
+
+fn is_valid_identifier(s: &str) -> bool {
+    let start_valid = match s.get(0..=0) {
+        None => false,
+        Some(first) => matches!(first.chars().next().unwrap(), 'a' ..= 'z' | 'A' ..= 'Z'),
+    };
+    if !start_valid {
+        return false;
+    }
+    // keywords are not identifiers
+    if s == "nil" || s == "true" || s == "false" {
+        return false;
+    }
+    for c in s.chars() {
+        match c {
+            'a' ..= 'z' | 'A' ..= 'Z' | '0' ..= '9' | '_' => (),
+            _ => return false,
+        }
+    }
+    true
 }

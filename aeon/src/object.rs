@@ -79,15 +79,14 @@ impl AeonObject {
 
     pub fn apply_macro(&mut self, name: String, mut params: Vec<AeonValue>) -> AeonValue {
         if let Some(mac) = self.macros.get(name.as_str()) {
-            let len = params.len();
-            if mac.len() != len {
-                panic!(format!("Wrong number of args to macro {}: was {}, expected {}", name, len, mac.len()));
+            if mac.len() != params.len() {
+                panic!(format!("Wrong number of args to macro {}: was {}, expected {}", name, params.len(), mac.len()));
             }
 
             let mut map = HashMap::<String,AeonValue>::new();
-            let mut drained = params.drain(..);
-            for p in 0..len{
-                mac.apply(p, drained.next().unwrap(), &mut map);
+
+            for (idx,parameter) in params.drain(..).enumerate() {
+                mac.apply(idx, parameter, &mut map);
             }
             AeonValue::Map(map)
         } else {

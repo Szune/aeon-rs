@@ -179,21 +179,29 @@ impl <'a> Deserializer<'a> {
         Ok(AeonValue::List(values))
     }
 
+    fn deserialize_map_entry(&mut self, key: String, aeon: &mut AeonObject) -> Result<(String, AeonValue), String> {
+        require!(self.lexer.next(), Token::Colon)?;
+        if let Some(next_tok) = self.lexer.next()? {
+            match self.deserialize_property_value(&next_tok, aeon) {
+                Ok(val) => Ok((key, val)),
+                Err(e) => Err(format!("Unexpected token in map: {:?}", e)),
+            }
+        } else {
+            Err(format!("Unterminated map with key {:?}", key))
+        }
+    }
+
     fn deserialize_map(&mut self, aeon: &mut AeonObject) -> Result<AeonValue, String> {
         let mut values = HashMap::<String,AeonValue>::new();
         while let Some(tok) = self.lexer.next()? {
             match tok {
                 Token::String(key) => {
-                    require!(self.lexer.next(), Token::Colon)?;
-                    if let Some(next_tok) = self.lexer.next()? {
-                        match self.deserialize_property_value(&next_tok, aeon) {
-                            Ok(val) => values.insert(key, val),
-                            Err(e) => return Err(format!("Unexpected token in map: {:?}", e)),
-                        };
-                    }
-                    else {
-                        return Err(format!("Unterminated map with values {:?}", values));
-                    }
+                    let entry = self.deserialize_map_entry(key, aeon)?;
+                    values.insert(entry.0, entry.1);
+                },
+                Token::Identifier(key) => {
+                    let entry = self.deserialize_map_entry(key, aeon)?;
+                    values.insert(entry.0, entry.1);
                 },
                 Token::RightBrace => break,
                 e => return Err(format!("Unexpected token in map: was {:?}, expected string key", e)),

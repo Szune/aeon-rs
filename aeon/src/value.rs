@@ -10,4 +10,3 @@ pub enum AeonValue {
     Map(HashMap<String,AeonValue>),
     List(Vec<AeonValue>),
 }
-
