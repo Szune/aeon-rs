@@ -8,6 +8,7 @@ mod deserializer;
 mod token;
 pub mod convert;
 pub mod convert_panic;
+mod flags;
 
 pub fn serialize(aeon: object::AeonObject) -> String {
     if aeon.is_empty { return String::new() }
