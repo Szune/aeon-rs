@@ -8,8 +8,8 @@ Awfully exciting object notation
 ```
 @server(id, name, ip, port)
 servers: [
-	server(1, "test", [127,0,0,1], 7171),
-	server(2, "production", [0,0,0,0], 8080),
+	server(1, "test", 127.0.0.1, 7171),
+	server(2, "production", 0.0.0.0, 8080),
 ]
 ```
 
@@ -69,7 +69,7 @@ Comments are _not_ serialized when performing deserializing -> serializing, this
 
 ### Supported types
 - Lists - ["One", 2, 3]
-- Maps - {"one": 1, "a": "b"}
+- Maps - {"one": 1, "a": "b", name: "a name"}
 - Bools (true/false are the only valid identifiers for bools)
 - Integers
 - Decimal numbers - Use a dot '.' as the decimal separator
