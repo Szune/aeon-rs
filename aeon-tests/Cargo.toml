@@ -1,0 +1,9 @@
+[package]
+name = "aeon_tests"
+version = "0.1.0"
+
+[lib]
+
+[dev-dependencies]
+aeon = { path = "../aeon" }
+aeon_derive = { path = "../aeon-derive" }

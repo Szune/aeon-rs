@@ -156,7 +156,7 @@ impl AeonObjectConvert for AeonObject {
 }
 
 macro_rules! gen_deserialize {
-    ($ty:ident, $conv:ident) => {
+    ($ty:path, $conv:ident) => {
         impl AeonDeserialize for $ty {
             fn from_property(field: AeonValue) -> Self {
                 field.$conv() as $ty
@@ -181,9 +181,10 @@ gen_deserialize!(u16, int);
 gen_deserialize!(u8, int);
 gen_deserialize!(f64, double);
 gen_deserialize!(f32, double);
+gen_deserialize!(std::net::IpAddr, ip);
 
 macro_rules! gen_serialize {
-    ($ty:ident, $val:ident, $conv:ident) => {
+    ($ty:path, $val:ident, $conv:path) => {
         impl AeonSerialize for $ty {
             fn to_aeon(&self) -> String {
                 unimplemented!()
@@ -212,3 +213,4 @@ gen_serialize!(u16, Integer, i64);
 gen_serialize!(u8, Integer, i64);
 gen_serialize!(f64, Double, f64);
 gen_serialize!(f32, Double, f64);
+gen_serialize!(std::net::IpAddr, Ip, std::net::IpAddr);

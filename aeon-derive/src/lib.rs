@@ -157,7 +157,7 @@ pub fn aeon_serialize(input: TokenStream) -> TokenStream {
 
             fn serialize_aeon_property(&self) -> aeon::value::AeonValue {
                 let mut map = std::collections::HashMap::<String,aeon::value::AeonValue>::new();
-                #serialize_aeon_property_func 
+                #serialize_aeon_property_func
                 aeon::value::AeonValue::Map(map)
             }
 
@@ -268,8 +268,8 @@ fn serialize_aeon_property_func_call_from_ser_ty(name: Ident, ser_ty: SerTy) -> 
     match ser_ty { // ordered by complexity
         // TODO: allow serializing HashMap<String,TNotAeonValue> if the values can be converted to
         // AeonValues
-        SerTy::Map(_m) => quote! { 
-            map.insert(#prop.into(), 
+        SerTy::Map(_m) => quote! {
+            map.insert(#prop.into(),
                        aeon::value::AeonValue::Map(self.#name.clone()));
         },
         SerTy::Regular(id) => quote! {
@@ -278,7 +278,7 @@ fn serialize_aeon_property_func_call_from_ser_ty(name: Ident, ser_ty: SerTy) -> 
                 map.insert(#prop.into(), ser);
             }
         },
-        SerTy::Vec(id) => quote! { 
+        SerTy::Vec(id) => quote! {
             map.insert(#prop.into(),
                 aeon::value::AeonValue::List(
                     self.#name.iter()
