@@ -1,0 +1,2 @@
+[workspace]
+members = ["aeon", "aeon-derive", "aeon-tests"]
