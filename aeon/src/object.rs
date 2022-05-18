@@ -79,8 +79,9 @@ impl AeonObject {
 
     pub fn apply_macro(&mut self, name: String, mut params: Vec<AeonValue>) -> AeonValue {
         if let Some(mac) = self.macros.get(name.as_str()) {
-            if mac.len() != params.len() {
-                panic!(format!("Wrong number of args to macro {}: was {}, expected {}", name, params.len(), mac.len()));
+            let len = params.len();
+            if mac.len() != len {
+                panic!("Wrong number of args to macro {}: was {}, expected {}", name, len, mac.len());
             }
 
             let mut map = HashMap::<String,AeonValue>::new();
@@ -90,7 +91,7 @@ impl AeonObject {
             }
             AeonValue::Map(map)
         } else {
-            panic!(format!("Macro does not exist: {}", name));
+            panic!("Macro does not exist: {}", name);
         }
     }
 
