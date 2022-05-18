@@ -189,7 +189,6 @@ impl <'a> Lexer<'a> {
         t_str.shrink_to_fit();
         if flags::has(num_flags, Self::FLAG_HAS_DECIMAL_POINT) {
             if flags::has(num_flags, Self::FLAG_HAS_DECIMALS) {
-                println!("has all the flags!");
                 Ok(Some(Token::Double(t_str.parse().unwrap())))
             }
             else{
