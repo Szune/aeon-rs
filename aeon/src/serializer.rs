@@ -42,9 +42,9 @@ impl AeonFormatter for PrettySerializer {
         for (_,v) in &obj.macros {
             ser.serialize_macro(v, &mut s);
         }
-		if !obj.macros.is_empty() {
-				s.push('\n');
-		}
+        if !obj.macros.is_empty() {
+            s.push('\n');
+        }
         for (_,v) in &obj.properties {
             ser.serialize_property(&obj, v, &mut s);
             s.push('\n');
@@ -96,7 +96,27 @@ impl AeonFormatter for PrettySerializer {
             AeonValue::String(v) => {
                 indent_me!(self, s);
                 s.push('"');
-                s.push_str(v.as_str());
+                for x in v.chars() {
+                    match x {
+                        '\\' => {
+                            s.push('\\');
+                            s.push('\\');
+                        },
+                        '\n' => {
+                            s.push('\\');
+                            s.push('n');
+                        },
+                        '\t' => {
+                            s.push('\\');
+                            s.push('t');
+                        },
+                        '"' => {
+                            s.push('\\');
+                            s.push('"');
+                        },
+                        _ => { s.push(x); },
+                    }
+                }
                 s.push('"');
             },
             AeonValue::Integer(v) => {
@@ -227,4 +247,119 @@ fn is_valid_identifier(s: &str) -> bool {
         }
     }
     true
+}
+#[cfg(test)]
+mod tests {
+    use crate::object::{AeonObject, AeonProperty, Macro};
+    use crate::value::{AeonValue};
+    use crate::serializer::{PrettySerializer,AeonFormatter};
+    use crate::map;
+
+    #[test]
+    pub fn serialize_using_macros() {
+        let mut aeon = AeonObject::new();
+        let aeon_value = AeonProperty::new("char".into(), AeonValue::Map(map![
+           "name".into() => AeonValue::String("erki".into()),
+           "world".into() => AeonValue::Integer(1),
+           "double".into() => AeonValue::Double(139.3567),
+           "or_nothing".into() => AeonValue::Nil,
+        ]));
+        aeon.add_macro(Macro::new("character".into(), vec![
+            "name".into(),
+            "world".into(),
+            "double".into(),
+            "or_nothing".into(),
+        ]));
+        aeon.add_property(aeon_value);
+        let serialized = PrettySerializer::serialize_aeon(aeon);
+        assert_eq!("@character(name, world, double, or_nothing)\n\nchar: character(\"erki\", 1, 139.3567, nil)\n\n", serialized);
+    }
+
+    #[test]
+    pub fn serialize_using_nested_macros() {
+        let mut aeon = AeonObject::new();
+        let aeon_value = AeonProperty::new("char".into(), AeonValue::Map(map![
+           "name".into() => AeonValue::String("erki".into()),
+           "world".into() => AeonValue::Integer(1),
+           "double".into() => AeonValue::Double(139.3567),
+           "or_nothing".into() => AeonValue::Map(map![
+               "name".into() => AeonValue::String("unused".into()),
+               "world".into() => AeonValue::Integer(-53),
+               "double".into() => AeonValue::Double(-11.38),
+               "or_nothing".into() => AeonValue::Nil,
+           ]),
+        ]));
+        aeon.add_macro(Macro::new("character".into(), vec![
+            "name".into(),
+            "world".into(),
+            "double".into(),
+            "or_nothing".into(),
+        ]));
+        aeon.add_property(aeon_value);
+        let serialized = PrettySerializer::serialize_aeon(aeon);
+        assert_eq!("@character(name, world, double, or_nothing)\n\nchar: character(\"erki\", 1, 139.3567, character(\"unused\", -53, -11.38, nil))\n\n", serialized);
+    }
+
+    #[test]
+    pub fn serialize_map_property() {
+        let mut aeon = AeonObject::new();
+        let aeon_value = AeonProperty::new("character".into(), AeonValue::Map(map![
+           "name".into() => AeonValue::String("erki".into()),
+           "world".into() => AeonValue::Integer(1),
+           "double".into() => AeonValue::Double(139.3567),
+           "or_nothing".into() => AeonValue::Nil,
+        ]));
+        aeon.add_property(aeon_value);
+        let serialized = PrettySerializer::serialize_aeon(aeon);
+        // TODO: regex or rewrite serialize implementation to be more testable
+        // or just don't test the entire serialization and instead its parts
+        assert!(serialized.starts_with("character: {\n"));
+        assert!(serialized.ends_with("}\n\n"));
+        assert!(serialized.contains(r#"name: "erki""#));
+        assert!(serialized.contains(r#"world: 1"#));
+        assert!(serialized.contains(r#"double: 139.3567"#));
+        assert!(serialized.contains(r#"or_nothing: nil"#));
+        assert!(serialized.contains(","));
+    }
+
+    #[test]
+    pub fn serialize_list_of_strings_property() {
+        let mut aeon = AeonObject::new();
+        let aeon_value = AeonProperty::new("characters".into(), AeonValue::List(vec![
+           AeonValue::String("erki".into()),
+           AeonValue::String("persiko".into()),
+           AeonValue::String("frukt".into()),
+           AeonValue::String("152436.13999".into()),
+        ]));
+        aeon.add_property(aeon_value);
+        let serialized = PrettySerializer::serialize_aeon(aeon);
+        assert_eq!("characters: [\n    \"erki\",\n    \"persiko\",\n    \"frukt\",\n    \"152436.13999\"\n]\n\n", serialized);
+    }
+
+    #[test]
+    pub fn serialize_string_property() {
+        let mut aeon = AeonObject::new();
+        let aeon_value = AeonProperty::new("character".into(), AeonValue::String("erki".into()));
+        aeon.add_property(aeon_value);
+        let ser = PrettySerializer::serialize_aeon(aeon);
+        assert_eq!("character: \"erki\"\n\n", ser);
+    }
+
+    #[test]
+    pub fn serialize_string_property_with_escape_char() {
+        let mut aeon = AeonObject::new();
+        let aeon_value = AeonProperty::new("testing".into(), AeonValue::String("C:\\Path\\Is\\Escaped\"oh quote\nline\ttab".into()));
+        aeon.add_property(aeon_value);
+        let ser = PrettySerializer::serialize_aeon(aeon);
+        assert_eq!("testing: \"C:\\\\Path\\\\Is\\\\Escaped\\\"oh quote\\nline\\ttab\"\n\n", ser);
+    }
+
+
+    #[test]
+    pub fn serialize_macros() {
+        let mut aeon = AeonObject::new();
+        aeon.add_macro(Macro::new("character".into(), vec!["name".into(), "world".into()]));
+        let ser = PrettySerializer::serialize_aeon(aeon);
+        assert_eq!("@character(name, world)\n\n", ser);
+    }
 }
