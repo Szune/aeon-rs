@@ -12,7 +12,6 @@ pub enum Token {
     String(String),
     Integer(i64),
     Double(f64),
-    Ip(std::net::IpAddr),
     At,
     True,
     False,

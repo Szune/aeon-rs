@@ -99,7 +99,7 @@ mod tests {
         assert!(serialized.contains("world: 1"));
         assert!(serialized.contains("double: 139.3567"));
         assert!(serialized.contains("or_nothing: nil"));
-        assert!(serialized.contains(","));
+        assert!(serialized.contains(','));
     }
 
     #[test]
@@ -115,7 +115,7 @@ mod tests {
         assert!(serialized.ends_with("}\n\n"));
         assert!(serialized.contains(r#""9to5": true"#));
         assert!(serialized.contains(r#"NineToFive: true"#));
-        assert!(serialized.contains(","));
+        assert!(serialized.contains(','));
     }
 
     #[test]
@@ -139,17 +139,6 @@ mod tests {
         aeon.add_property(aeon_value);
         let ser = aeon::serialize(aeon);
         assert_eq!("character: \"erki isthename\"\n\n", ser);
-    }
-
-    #[test]
-    pub fn serialize_ip_property() {
-        let mut aeon = AeonObject::new();
-        let aeon_value = AeonProperty::new(
-            "ip".into(),
-            AeonValue::Ip(std::net::IpAddr::V4(std::net::Ipv4Addr::new(127, 1, 2, 3))));
-        aeon.add_property(aeon_value);
-        let ser = aeon::serialize(aeon);
-        assert_eq!("ip: 127.1.2.3\n\n", ser);
     }
 
     #[test]

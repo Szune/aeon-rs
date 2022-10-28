@@ -101,8 +101,8 @@ fn from_aeon_func_call_from_ser_ty(name: Ident, ser_ty: SerTy) -> proc_macro2::T
 /// Get type that is being serialized/deserialized for easier/lazier handling
 fn get_ser_ty(ty: &Type, s: proc_macro2::Span) -> SerTy {
     let mut ty_name = quote!(#ty).to_string() // may need .as_str()
-        .replace("\"", "")
-        .replace(" ", "");
+        .replace('\"', "")
+        .replace(' ', "");
 
     macro_rules! inner_generic_ty {
         ($ty:ident) => (
@@ -320,13 +320,10 @@ fn get_struct_fields(data: &Data) -> Vec<&Field> {
     }
 }
 
-fn get_name_attribute(name: String, input: &Vec<syn::Attribute>) -> bool {
-    for att in input.into_iter() {
+fn get_name_attribute(name: String, input: &[syn::Attribute]) -> bool {
+    if let Some(att) = input.iter().next() {
         let attr = att.parse_meta().unwrap();
-        match attr {
-            Meta::Path(p) if p.get_ident().unwrap().to_string() == name => return true,
-            _ => return false,
-        }
+        return matches!(attr, Meta::Path(p) if *p.get_ident().unwrap() == name)
     }
     false
 }

@@ -12,7 +12,7 @@ where
 }
 
 #[inline]
-pub fn add<T>(value: &mut T, flag: T) -> ()
+pub fn add<T>(value: &mut T, flag: T)
 where
     T: BitOrAssign + Copy
 {

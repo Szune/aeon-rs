@@ -8,8 +8,8 @@ Awfully exciting object notation
 ```
 @server(id, name, ip, port)
 servers: [
-	server(1, "test", 127.0.0.1, 7171),
-	server(2, "production", 0.0.0.0, 8080),
+	server(1, "test", "127.0.0.1", 7171),
+	server(2, "production", "0.0.0.0", 8080),
 ]
 ```
 

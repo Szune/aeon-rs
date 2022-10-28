@@ -9,8 +9,6 @@ pub trait AeonConvert {
     fn str(self) -> String;
     fn int(self) -> i64;
     fn double(self) -> f64;
-    fn ip(self) -> std::net::IpAddr;
-    fn ip_str(self) -> String;
     fn map(self) -> HashMap<String,AeonValue>;
     fn list(self) -> Vec<AeonValue>;
     fn get(&self, prop: &str) -> AeonValue;
@@ -28,10 +26,7 @@ macro_rules! panic_convert(
 
 impl AeonConvert for AeonValue {
     fn nil(self) -> bool {
-        match self {
-            AeonValue::Nil => true,
-            _ => false,
-        }
+        matches!(self, AeonValue::Nil)
     }
 
     fn bool(self) -> bool {
@@ -49,18 +44,6 @@ impl AeonConvert for AeonValue {
     fn double(self) -> f64 {
         panic_convert!(self, AeonValue::Double)
     }
-
-    fn ip(self) -> std::net::IpAddr {
-        panic_convert!(self, AeonValue::Ip)
-    }
-
-    fn ip_str(self) -> String {
-        match self {
-            AeonValue::Ip(ip) => ip.to_string(),
-            _ => panic!("Invalid value conversion for {:?}", self),
-        }
-    }
-
 
     fn map(self) -> HashMap<String,AeonValue> {
         panic_convert!(self, AeonValue::Map)
@@ -116,7 +99,7 @@ impl AeonObjectConvert for AeonObject {
 
     fn get_path(&self, path: &str) -> AeonValue {
         let fragments = path.split('/');
-        let mut iter = fragments.filter(|&f| f != "");
+        let mut iter = fragments.filter(|&f| !f.is_empty());
         let mut current : AeonValue;
         if let Some(frag) = iter.next() {
             current = self.get(frag);
@@ -124,14 +107,14 @@ impl AeonObjectConvert for AeonObject {
             panic!("Failed to get property '{}'", path);
         }
 
-        while let Some(frag) = iter.next() {
+        for frag in iter {
             current = current.get(frag);
         }
         current
     }
 
     fn remove(&mut self, prop: &str) -> AeonValue {
-        return if let Some(p) = self.properties.remove(prop) {
+        if let Some(p) = self.properties.remove(prop) {
             p.value
         } else {
             panic!("Failed to get property '{}'", prop);
@@ -140,7 +123,7 @@ impl AeonObjectConvert for AeonObject {
 
     fn remove_path(&mut self, path: &str) -> AeonValue {
         let fragments = path.split('/');
-        let mut iter = fragments.filter(|&f| f != "");
+        let mut iter = fragments.filter(|&f| !f.is_empty());
         let mut current : AeonValue;
         if let Some(frag) = iter.next() {
             current = self.remove(frag);
@@ -148,7 +131,7 @@ impl AeonObjectConvert for AeonObject {
             panic!("Failed to get property '{}'", path);
         }
 
-        while let Some(frag) = iter.next() {
+        for frag in iter {
             current = current.remove(frag);
         }
         current
@@ -181,7 +164,6 @@ gen_deserialize!(u16, int);
 gen_deserialize!(u8, int);
 gen_deserialize!(f64, double);
 gen_deserialize!(f32, double);
-gen_deserialize!(std::net::IpAddr, ip);
 
 macro_rules! gen_serialize {
     ($ty:path, $val:ident, $conv:path) => {
@@ -213,4 +195,3 @@ gen_serialize!(u16, Integer, i64);
 gen_serialize!(u8, Integer, i64);
 gen_serialize!(f64, Double, f64);
 gen_serialize!(f32, Double, f64);
-gen_serialize!(std::net::IpAddr, Ip, std::net::IpAddr);

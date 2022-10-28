@@ -1,4 +1,4 @@
-use std::str::{Chars, FromStr};
+use std::str::Chars;
 use crate::token::Token;
 use crate::flags;
 
@@ -9,7 +9,7 @@ pub struct Lexer<'a> {
 
 
 impl <'a> Lexer<'a> {
-    pub fn new(code: &'a String) -> Lexer<'a> {
+    pub fn new(code: &'a str) -> Lexer<'a> {
         Lexer {
             code: code.chars(),
             prev: None,
@@ -36,7 +36,7 @@ impl <'a> Lexer<'a> {
     }
 
     fn skip_comment(&mut self) {
-        while let Some(t) = self.code.next() {
+        for t in self.code.by_ref() {
             if t == '\n' { 
                 break; 
             }
@@ -59,7 +59,7 @@ impl <'a> Lexer<'a> {
 
 
     fn perform_match(&mut self, now: char) -> Result<Option<Token>, String> {
-        return match now {
+        match now {
             '(' => Ok(Some(Token::LeftParenthesis)),
             ')' => Ok(Some(Token::RightParenthesis)),
             '[' => Ok(Some(Token::LeftBracket)),
@@ -71,8 +71,7 @@ impl <'a> Lexer<'a> {
             '@' => Ok(Some(Token::At)),
             'a' ..= 'z' | 'A' ..= 'Z' => self.get_identifier(now),
             '"' => self.get_string(),
-            '0'..='9' => self.get_number_or_ip(now),
-            '-' => self.get_number(now),
+            '0'..='9' | '-' => self.get_number(now),
             _ => Err(format!("Unknown char {}",now)),
         }
     }
@@ -80,7 +79,7 @@ impl <'a> Lexer<'a> {
     fn get_identifier(&mut self, now: char) -> Result<Option<Token>, String> {
         let mut t_str = String::with_capacity(10);
         t_str.push(now);
-        while let Some(t) = self.code.next() {
+        for t in self.code.by_ref() {
             match t {
                 'a' ..= 'z' | 'A' ..= 'Z' | '0' ..= '9' | '_' => {
                     t_str.push(t);
@@ -88,12 +87,7 @@ impl <'a> Lexer<'a> {
                 p => {
                     self.prev = Some(p);
                     t_str.shrink_to_fit();
-                    return match t_str.as_str() {
-                        "nil" => Ok(Some(Token::Nil)),
-                        "true" => Ok(Some(Token::True)),
-                        "false" => Ok(Some(Token::False)),
-                        _ => Ok(Some(Token::Identifier(t_str))),
-                    };
+                    break;
                 },
             }
         }
@@ -108,63 +102,12 @@ impl <'a> Lexer<'a> {
 
     const FLAG_HAS_DECIMAL_POINT : u8 = 1;
     const FLAG_HAS_DECIMALS : u8 = 2;
-    const FLAG_IS_IP : u8 = 4;
-
-    fn get_number_or_ip(&mut self, c: char) -> Result<Option<Token>, String> {
-        let mut t_str = String::with_capacity(10);
-        let mut num_flags = 0u8;
-        t_str.push(c);
-        while let Some(t) = self.code.next() {
-            match t {
-                '0' ..= '9' | '_' => {
-                    if flags::has(num_flags, Self::FLAG_HAS_DECIMAL_POINT) {
-                        flags::add(&mut num_flags, Self::FLAG_HAS_DECIMALS);
-                    }
-                    t_str.push(t);
-                },
-                '.' => {
-                    if flags::has(num_flags, Self::FLAG_HAS_DECIMAL_POINT) &&
-                        !flags::has(num_flags, Self::FLAG_HAS_DECIMALS) {
-                        return Err(format!("Two decimal points in number: {}", t_str))
-                    } else if flags::has(num_flags, Self::FLAG_HAS_DECIMALS) {
-                        flags::add(&mut num_flags, Self::FLAG_IS_IP);
-                    } else if !flags::has(num_flags, Self::FLAG_HAS_DECIMAL_POINT) {
-                        flags::add(&mut num_flags, Self::FLAG_HAS_DECIMAL_POINT);
-                    }
-                    t_str.push(t);
-                },
-                p => {
-                    self.prev = Some(p);
-                    break;
-                },
-            }
-        }
-
-        t_str.shrink_to_fit();
-        if flags::has(num_flags, Self::FLAG_IS_IP) {
-            Ok(Some(Token::Ip(
-                std::net::IpAddr::V4(
-                    std::net::Ipv4Addr::from_str(t_str.as_str())
-                        .map_err(|e| e.to_string())?
-                )
-            )))
-        } else if flags::has(num_flags, Self::FLAG_HAS_DECIMAL_POINT) {
-            if flags::has(num_flags, Self::FLAG_HAS_DECIMALS) {
-                Ok(Some(Token::Double(t_str.parse().unwrap())))
-            }
-            else{
-                Err("bad".into())
-            }
-        } else {
-            Ok(Some(Token::Integer(t_str.parse().unwrap())))
-        }
-    }
 
     fn get_number(&mut self, c: char) -> Result<Option<Token>, String> {
         let mut t_str = String::with_capacity(10);
         let mut num_flags = 0u8;
         t_str.push(c);
-        while let Some(t) = self.code.next() {
+        for t in self.code.by_ref() {
             match t {
                 '0' ..= '9' | '_' => {
                     if flags::has(num_flags, Self::FLAG_HAS_DECIMAL_POINT) {
@@ -192,7 +135,7 @@ impl <'a> Lexer<'a> {
                 Ok(Some(Token::Double(t_str.parse().unwrap())))
             }
             else{
-                Err("bad".into())
+                Err(format!("Trailing decimal point in number: {}", t_str))
             }
         } else {
             Ok(Some(Token::Integer(t_str.parse().unwrap())))
@@ -244,30 +187,29 @@ mod tests {
         let mut lex = Lexer::new(&s);
         macro_rules! get_current( () => { lex.next().unwrap().unwrap() } );
         let mut current = get_current!();
-        macro_rules! msg( ($str:expr) => { format!("expected {}, was {:?}", $str, current) } );
 
         // assert
-        assert!(matches!(current, Token::Identifier(_)), msg!("ident hello"));
+        assert!(matches!(current, Token::Identifier(_)), "expected ident hello, was {:?}", current);
         current = get_current!();
-        assert!(matches!(current, Token::Colon), msg!("colon"));
-        current = get_current!();
-        assert!(
-            matches!(current, Token::String(_)), msg!("string \"world\""));
+        assert!(matches!(current, Token::Colon), "expected colon, was {:?}", current);
         current = get_current!();
         assert!(
-            matches!(current, Token::Identifier(_)), msg!("ident world"));
+            matches!(current, Token::String(_)), "expected string \"world\", was {:?}", current);
         current = get_current!();
         assert!(
-            matches!(current, Token::Colon), msg!("colon"));
+            matches!(current, Token::Identifier(_)), "expected ident world, was {:?}", current);
         current = get_current!();
         assert!(
-            matches!(current, Token::Integer(_)), msg!("integer 1236"));
+            matches!(current, Token::Colon), "expected colon, was {:?}", current);
+        current = get_current!();
+        assert!(
+            matches!(current, Token::Integer(_)), "expected integer 1236, was {:?}", current);
     }
 
     #[test]
     pub fn integer_token() {
         assert!(matches!
-                (Lexer::new(&"150".to_string())
+                (Lexer::new("150")
                  .next()
                  .unwrap()
                  .unwrap(),
@@ -278,7 +220,7 @@ mod tests {
     #[test]
     pub fn nil_token() {
         assert!(matches!
-                (Lexer::new(&"nil".to_string())
+                (Lexer::new("nil")
                  .next()
                  .unwrap()
                  .unwrap(),
@@ -290,7 +232,7 @@ mod tests {
     #[test]
     pub fn string_token() {
         let t_str = 
-                Lexer::new(&"\"hello world\"".to_string())
+                Lexer::new("\"hello world\"")
                  .next()
                  .unwrap()
                  .unwrap();
@@ -305,7 +247,7 @@ mod tests {
     #[test]
     pub fn identifier_token() {
         let t_str = 
-                Lexer::new(&"WORLD01_HELLo".to_string())
+                Lexer::new("WORLD01_HELLo")
                  .next()
                  .unwrap()
                  .unwrap();
@@ -320,7 +262,7 @@ mod tests {
     #[test]
     pub fn double_token() {
         let double = 
-                Lexer::new(&"19.13".to_string())
+                Lexer::new("19.13")
                  .next()
                  .unwrap()
                  .unwrap();

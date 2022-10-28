@@ -1,4 +1,4 @@
-use crate::value::{AeonValue};
+use crate::value::AeonValue;
 use std::collections::HashMap;
 
 #[derive(Clone, Debug)]
@@ -14,6 +14,8 @@ impl Macro {
             args,
         }
     }
+
+    pub fn is_empty(&self) -> bool { self.args.is_empty() }
 
     pub fn len(&self) -> usize { self.args.len() }
 

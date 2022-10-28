@@ -32,7 +32,7 @@ pub trait AeonSerialize {
     fn to_aeon(&self) -> String;
     // TODO: rebuild this to not perform a bunch of unnecessary steps
     fn serialize_aeon_property(&self) -> value::AeonValue;
-    fn create_macros(insert_self: bool) -> std::collections::HashMap::<String, object::Macro>;
+    fn create_macros(insert_self: bool) -> std::collections::HashMap<String, object::Macro>;
 }
 
 pub struct SerializedProperty {

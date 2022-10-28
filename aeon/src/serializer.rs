@@ -1,6 +1,5 @@
 use crate::object::{AeonObject, Macro, AeonProperty};
-use crate::value::{AeonValue};
-use std::net::IpAddr;
+use crate::value::AeonValue;
 
 macro_rules! serialize_arg(
     ($s:ident, $idx:ident, $val:expr) => {
@@ -39,14 +38,14 @@ impl AeonFormatter for PrettySerializer {
     fn serialize_aeon(obj: AeonObject) -> String {
         let mut ser = PrettySerializer::new();
         let mut s = String::with_capacity(50);
-        for (_,v) in &obj.macros {
-            ser.serialize_macro(v, &mut s);
+        for mac in obj.macros.values() {
+            ser.serialize_macro(mac, &mut s);
         }
         if !obj.macros.is_empty() {
             s.push('\n');
         }
-        for (_,v) in &obj.properties {
-            ser.serialize_property(&obj, v, &mut s);
+        for prop in obj.properties.values() {
+            ser.serialize_property(&obj, prop, &mut s);
             s.push('\n');
             s.push('\n');
         }
@@ -211,19 +210,6 @@ impl AeonFormatter for PrettySerializer {
                     s.push('}');
                 }
             }
-            AeonValue::Ip(ip) => {
-                match ip {
-                    IpAddr::V4(v4) => {
-                        let octets = v4.octets()
-                            .iter()
-                            .map(|o|o.to_string())
-                            .collect::<Vec<String>>()
-                            .join(".");
-                        s.push_str(octets.as_str());
-                    }
-                    IpAddr::V6(_) => {todo!()}
-                }
-            }
         }
     }
 }
@@ -319,7 +305,7 @@ mod tests {
         assert!(serialized.contains(r#"world: 1"#));
         assert!(serialized.contains(r#"double: 139.3567"#));
         assert!(serialized.contains(r#"or_nothing: nil"#));
-        assert!(serialized.contains(","));
+        assert!(serialized.contains(','));
     }
 
     #[test]

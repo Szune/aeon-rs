@@ -8,8 +8,6 @@ pub trait AeonConvert {
     fn str(self) -> Option<String>;
     fn int(self) -> Option<i64>;
     fn double(self) -> Option<f64>;
-    fn ip(self) -> Option<std::net::IpAddr>;
-    fn ip_str(self) -> Option<String>;
     fn map(self) -> Option<HashMap<String,AeonValue>>;
     fn list(self) -> Option<Vec<AeonValue>>;
     fn get(&self, prop: &str) -> Option<AeonValue>;
@@ -28,10 +26,7 @@ macro_rules! try_convert(
 
 impl AeonConvert for AeonValue {
     fn nil(self) -> bool {
-        match self {
-            AeonValue::Nil => true,
-            _ => false,
-        }
+        matches!(self, AeonValue::Nil)
     }
 
     fn bool(self) -> Option<bool> {
@@ -50,17 +45,6 @@ impl AeonConvert for AeonValue {
         try_convert!(self, AeonValue::Double)
     }
 
-    fn ip(self) -> Option<std::net::IpAddr> {
-        try_convert!(self, AeonValue::Ip)
-    }
-
-    fn ip_str(self) -> Option<String> {
-        match self {
-            AeonValue::Ip(ip) =>Some(ip.to_string()),
-            _ => None,
-        }
-    }
-
     fn map(self) -> Option<HashMap<String,AeonValue>> {
         try_convert!(self, AeonValue::Map)
     }
@@ -71,13 +55,7 @@ impl AeonConvert for AeonValue {
 
     fn get(&self, prop: &str) -> Option<AeonValue> {
         match self {
-            AeonValue::Map(v) => {
-                if let Some(p) = v.get(prop) {
-                    Some(p.clone())
-                } else {
-                    None
-                }
-            }
+            AeonValue::Map(v) => v.get(prop).cloned(),
             _ => None,
         }
     }
@@ -85,11 +63,7 @@ impl AeonConvert for AeonValue {
     fn remove(&mut self, prop: &str) -> Option<AeonValue> {
         match self {
             AeonValue::Map(v) => {
-                if let Some(p) = v.remove(prop) {
-                    Some(p)
-                } else {
-                    None
-                }
+                v.remove(prop)
             }
             _ => None,
         }
@@ -136,14 +110,6 @@ impl AeonConvert for Option<AeonValue> {
         opt_convert!(self, double)
     }
 
-    fn ip(self) -> Option<std::net::IpAddr> {
-        opt_convert!(self, ip)
-    }
-
-    fn ip_str(self) -> Option<String> {
-        opt_convert!(self, ip_str)
-    }
-
     fn map(self) -> Option<HashMap<String,AeonValue>> {
         opt_convert!(self, map)
     }
@@ -170,16 +136,12 @@ pub trait AeonObjectConvert {
 
 impl AeonObjectConvert for AeonObject {
     fn get(&self, prop: &str) -> Option<AeonValue> {
-        return if let Some(p) = self.properties.get(prop) {
-            Some(p.value.clone())
-        } else {
-            None
-        }
+        return self.properties.get(prop).map(|p| p.value.clone())
     }
 
     fn get_path(&self, path: &str) -> Option<AeonValue> {
         let fragments = path.split('/');
-        let mut iter = fragments.filter(|&f| f != "");
+        let mut iter = fragments.filter(|&f| !f.is_empty());
         let mut current : Option<AeonValue>;
         if let Some(frag) = iter.next() {
             current = self.get(frag);
@@ -187,14 +149,14 @@ impl AeonObjectConvert for AeonObject {
             return None;
         }
 
-        while let Some(frag) = iter.next() {
+        for frag in iter {
             current = current.get(frag);
         }
         current
     }
 
     fn remove(&mut self, prop: &str) -> Option<AeonValue> {
-        return if let Some(p) = self.properties.remove(prop) {
+        if let Some(p) = self.properties.remove(prop) {
             Some(p.value)
         } else {
             None
@@ -203,7 +165,7 @@ impl AeonObjectConvert for AeonObject {
 
     fn remove_path(&mut self, path: &str) -> Option<AeonValue> {
         let fragments = path.split('/');
-        let mut iter = fragments.filter(|&f| f != "");
+        let mut iter = fragments.filter(|&f| !f.is_empty());
         let mut current : Option<AeonValue>;
         if let Some(frag) = iter.next() {
             current = self.remove(frag);
@@ -211,7 +173,7 @@ impl AeonObjectConvert for AeonObject {
             return None;
         }
 
-        while let Some(frag) = iter.next() {
+        for frag in iter {
             current = current.remove(frag);
         }
         current

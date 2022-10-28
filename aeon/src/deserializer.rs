@@ -32,9 +32,9 @@ macro_rules! require {
 }
 
 impl <'a> Deserializer<'a> {
-    pub fn new(code: &'a String) -> Deserializer<'a> {
+    pub fn new(code: &'a str) -> Deserializer<'a> {
         Deserializer {
-            lexer: Lexer::new(&code),
+            lexer: Lexer::new(code),
         }
     }
 
@@ -86,7 +86,7 @@ impl <'a> Deserializer<'a> {
                 return Err(format!("Unterminated macro definition {}", ident));
             }
         }
-        aeon.add_macro(Macro::new(ident.clone(), args));
+        aeon.add_macro(Macro::new(ident, args));
         Ok(())
     }
 
@@ -94,7 +94,7 @@ impl <'a> Deserializer<'a> {
         require!(self.lexer.next(), Token::Colon)?;
         if let Some(tok) = self.lexer.next()? {
             let val = self.deserialize_property_value(&tok, aeon)?;
-            aeon.add_property(AeonProperty::new(prop_name.clone(), val));
+            aeon.add_property(AeonProperty::new(prop_name, val));
         } else {
             return Err(format!("Unterminated property value {}", prop_name));
         }
@@ -102,7 +102,7 @@ impl <'a> Deserializer<'a> {
     }
 
     fn deserialize_property_value(&mut self, tok: &Token, aeon: &mut AeonObject) -> Result<AeonValue, String> {
-        return match tok {
+        match tok {
             Token::Identifier(id) => self.deserialize_macro_use(id.clone(), aeon),
             Token::LeftBracket => self.deserialize_list(aeon),
             Token::LeftBrace => self.deserialize_map(aeon),
@@ -112,7 +112,7 @@ impl <'a> Deserializer<'a> {
                     Err(e) => Err(format!("Unexpected token in property value: {:?}", e)),
                 }
             },
-        };
+        }
     }
 
     fn deserialize_macro_use(&mut self, name: String, aeon: &mut AeonObject) -> Result<AeonValue, String> {
@@ -144,7 +144,6 @@ impl <'a> Deserializer<'a> {
 
     fn deserialize_constants(&mut self, tok: &Token) -> Result<AeonValue, String> {
         match tok {
-            Token::Ip(ip) => Ok(AeonValue::Ip(*ip)),
             Token::String(s) => Ok(AeonValue::String(s.clone())),
             Token::Integer(i) => Ok(AeonValue::Integer(*i)),
             Token::Double(d) => Ok(AeonValue::Double(*d)),
