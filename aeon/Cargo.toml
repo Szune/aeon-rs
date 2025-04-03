@@ -1,8 +1,8 @@
 [package]
 name = "aeon"
-version = "0.4.0"
-authors = ["Szune <erikiwarson@gmail.com>"]
-edition = "2018"
+version = "0.5.0"
+authors = ["Szune <szuneghub@kastaintestenar.org>"]
+edition = "2021"
 description = "A configuration file format with macros for brevity."
 readme = "../README.md"
 repository = "https://github.com/Szune/aeon-rs"
@@ -15,4 +15,3 @@ keywords = ["serializer", "deserializer"]
 [lib]
 
 [dependencies]
-
