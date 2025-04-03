@@ -1,0 +1,13 @@
+[package]
+name = "aeon_derive_utils"
+version = "0.1.0"
+authors = ["Szune <szuneghub@kastaintestenar.org>"]
+edition = "2021"
+description = "Derive macro utilities for the aeon crate."
+repository = "https://github.com/Szune/aeon-rs"
+license = "MIT"
+categories = ["development-tools::procedural-macro-helpers"]
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
