@@ -1,6 +1,6 @@
 [package]
 name = "aeon"
-version = "0.5.0"
+version = "0.6.0"
 authors = ["Szune <szuneghub@kastaintestenar.org>"]
 edition = "2021"
 description = "A configuration file format with macros for brevity."
