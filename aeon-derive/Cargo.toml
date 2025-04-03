@@ -1,7 +1,7 @@
 [package]
 name = "aeon_derive"
-version = "0.2.0"
-authors = ["Szune <erikiwarson@gmail.com>"]
+version = "0.4.0"
+authors = ["Szune <szuneghub@kastaintestenar.org>"]
 edition = "2018"
 description = "Derive macros for package 'aeon'."
 readme = "../README.md"
@@ -16,6 +16,4 @@ keywords = ["serializer", "deserializer"]
 proc-macro = true
 
 [dependencies]
-syn = "1.0.39"
-quote = "1.0.7"
-proc-macro2 = "1.0.19"
+aeon_derive_utils = "0.1.0"
